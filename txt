@@ -1,0 +1,110 @@
+edit component
+===========
+import { Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ModService } from '../api.service';
+
+@Component({
+  selector: 'app-edit',
+  templateUrl: './edit.component.html',
+  styleUrls: ['./edit.component.scss']
+})
+export class EditComponent implements OnInit {
+  id!: number;
+  employee: any;
+  form!: FormGroup;
+
+  constructor(private apiService: ModService,private router: Router,  private route: ActivatedRoute,) { }
+
+  ngOnInit(): void {
+
+    this.id = this.route.snapshot.params['employeeId'];
+    this.apiService.find(this.id).subscribe((date: any)=>{
+      this.employee = date.data;
+    });
+    
+    this.form = new FormGroup({
+      name: new FormControl('', [Validators.required]),
+      salary: new FormControl('', Validators.required),
+      age: new FormControl('', [Validators.required])
+    });
+
+  }
+
+
+  get f(){
+    return this.form.controls;
+  }
+  submit(){
+    console.log(this.form.value);
+    this.apiService.edit(this.id, this.form.value).subscribe(res => {
+         console.log(res);
+         this.router.navigateByUrl('list');
+    })
+  }
+
+
+}
+============
+edit html
+============
+<div class="container">
+    <h1>Update Employee</h1>
+
+    <button routerLink="/list" class="btn btn-primary">Back</button>
+    <br>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+
+        <div class="form-group">
+            <label for="name">name:</label>
+            <input formControlName="name" id="name" type="text" [(ngModel)]="employee.employee_name" class="form-control">
+            <div *ngIf="f.name.touched && f.name.invalid" class="alert alert-danger">
+                <div *ngIf="f.name.errors?.required">name is required.</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="salary">salary:</label>
+            <input formControlName="salary" id="salary" type="number" [(ngModel)]="employee.employee_salary" class="form-control">
+            <div *ngIf="f.salary.touched && f.salary.invalid" class="alert alert-danger">
+                <div *ngIf="f.salary.errors?.required">salary is required.</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="age">age:</label>
+            <input formControlName="age" id="age" type="number" [(ngModel)]="employee.employee_age" class="form-control">
+            <div *ngIf="f.age.touched && f.age.invalid" class="alert alert-danger">
+                <div *ngIf="f.age.errors?.required">age is required.</div>
+            </div>
+        </div>
+
+        <br>
+        <button class="btn btn-primary" type="submit" [disabled]="!form.valid">Update</button>
+    </form>
+</div>
+===============
+service
+=============
+  getAll(): Observable<any> {
+    return this.httpClient.get(`http://dummy.restapiexample.com/api/v1/employees`)
+  }
+     
+  create(post:any): Observable<any> {
+    return this.httpClient.post(`http://dummy.restapiexample.com/api/v1/create`, JSON.stringify(post))
+  }  
+     
+  find(id:number): Observable<any> {
+    return this.httpClient.get(`http://dummy.restapiexample.com/api/v1/employee/${id}`)
+  }
+     
+  edit(id:number, post:any): Observable<any>{
+    return this.httpClient.put(`http://dummy.restapiexample.com/api/v1/update/${id}`, JSON.stringify(post))
+  }
+     
+  delete(id:number){
+    return this.httpClient.delete(`	http://dummy.restapiexample.com/api/v1/delete/${id}`)
+  }
+  ==========
+  
